@@ -11,9 +11,12 @@ TODO [docs](https://quarkus.io/guides/writing-extensions#multi-module-maven-proj
 ## native test
 
 ```
-NATIVE_BUILD_CONF="-Dquarkus.native.remote-container-build=true"
-NATIVE_BUILD_CONF="$NATIVE_BUILD_CONF -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel:21.3.0.0-Final-java11"
-mvn clean install; (cd integration-tests/; mvn clean verify -Pnative $NATIVE_BUILD_CONF)
+NATIVE_BUILD_OPTS="-Dquarkus.native.remote-container-build=true"
+NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel:21.3.0.0-Final-java11@sha256:0ad1f11718d7a94e97d368f13c93a6b52eec82fb3d196c0fb2593a9685894ffa"
+NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.enable-reports=true"
+# Get stdout from container-build docker run
+NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.container-runtime-options=-ti"
+mvn clean install; (cd integration-tests/; mvn clean verify -Pnative $NATIVE_BUILD_OPTS)
 
 # The quarkus-resteasy hello example executable gets size 50M and we expect the library to be included
 du -sh integration-tests/target/quarkus-javet-integration-tests-1.0.0-SNAPSHOT-runner
