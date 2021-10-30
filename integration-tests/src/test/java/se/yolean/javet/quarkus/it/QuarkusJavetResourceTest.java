@@ -3,6 +3,7 @@ package se.yolean.javet.quarkus.it;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -20,6 +21,7 @@ public class QuarkusJavetResourceTest {
   }
 
   @Test
+  @Disabled // currently only including the V8 lib
   public void testNodeMode() {
     given()
       .when().get("/quarkus-javet/node")
