@@ -1,16 +1,12 @@
 package se.yolean.javet.quarkus.deployment;
 
-import java.io.File;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.List;
 import java.util.logging.Logger;
-
-import javax.inject.Inject;
 
 import com.caoccao.javet.enums.JSRuntimeType;
 import com.caoccao.javet.exceptions.JavetException;
 import com.caoccao.javet.interop.loader.JavetLibLoader;
-import com.caoccao.javet.utils.JavetOSUtils;
 
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
@@ -23,7 +19,9 @@ import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.RuntimeReinitializedClassBuildItem;
 import io.quarkus.deployment.pkg.NativeConfig;
+import se.yolean.javet.quarkus.runtime.JavetLibLoadingSetup;
 import se.yolean.javet.quarkus.runtime.QuarkusJavetRecorder;
+import se.yolean.javet.quarkus.runtime.QuarkusJavetStaticInit;
 
 class QuarkusJavetProcessor {
 
@@ -32,9 +30,20 @@ class QuarkusJavetProcessor {
   private static final Logger LOGGER = Logger.getLogger(QuarkusJavetProcessor.class.getSimpleName());
 
   @BuildStep
+  @Record(ExecutionTime.STATIC_INIT)
+  void registerStaticRecorder(QuarkusJavetStaticInit recorder) {
+    recorder.disableBuiltInLibLoading();
+  }
+
+  @BuildStep
   @Record(ExecutionTime.RUNTIME_INIT)
   void registerLibraryRecorder(QuarkusJavetRecorder recorder) {
-    recorder.loadLibrary();
+    recorder.loadLibraryModeV8();
+    recorder.loadLibraryModeNode();
+  }
+
+  Collection<JSRuntimeType> getRuntimeTypes() {
+    return List.of(JSRuntimeType.V8, JSRuntimeType.Node);
   }
 
   @BuildStep
@@ -48,21 +57,19 @@ class QuarkusJavetProcessor {
 
     feature.produce(new FeatureBuildItem(FEATURE));
 
-    // String libFileName = extractLibToClasspathFile();
-    //String libFileName = "libjavet-v8-linux-x86_64.v.1.0.2.so";
-    // This is the resourceFileName in JavetLibLoader
-    String libFileName = "/libjavet-v8-linux-x86_64.v.1.0.2.so";
+    if (!config.isContainerBuild()) {
+      LOGGER.info("Retaining Javet's default lib loading for non-native/non-container build");
+      return;
+    }
 
-    QuarkusJavetRecorder.checkClassPathResource(libFileName);
-    extractLibToClasspathFile();
-    QuarkusJavetRecorder.checkClassPathResource(libFileName);
+    JavetLibLoadingSetup.disableBuiltInLoader();
 
-    // https://github.com/quarkusio/quarkus/blob/2.4.0.Final/core/test-extension/deployment/src/main/java/io/quarkus/extest/deployment/TestProcessor.java#L126
-    // https://github.com/quarkusio/quarkus/tree/2.4.0.Final/core/test-extension/deployment/src/main/resources
+    for (JSRuntimeType mode : getRuntimeTypes()) {
+      addNativeJavetMode(nativeLibs, config, mode);
+    }
 
     registerClassesThatAreLoadedThroughReflection(reflectiveClasses, launchMode);
     registerClassesThatAreAccessedViaJni(jniRuntimeAccessibleClasses);
-    addSupportForJavetMode(nativeLibs, config, libFileName);
     enableLoadOfNativeLibs(reinitialized);
   }
 
@@ -86,86 +93,45 @@ class QuarkusJavetProcessor {
     // TODO any such classes in Javet?
   }
 
-  private void addSupportForJavetMode(BuildProducer<NativeImageResourceBuildItem> nativeLibs, NativeConfig nativeConfig,
-      String modeSpecificLibFileName) {
+  private void addNativeJavetMode(BuildProducer<NativeImageResourceBuildItem> nativeLibs, NativeConfig nativeConfig,
+      JSRuntimeType mode) {
+    JavetLibLoader loader = new JavetLibLoader(mode);
+    String libName;
+    try {
+      libName = loader.getLibFileName();
+    } catch (JavetException e) {
+      throw new RuntimeException("Failed to get Javet lib name", e);
+    }
+    addNativeJavetMode(nativeLibs, nativeConfig, libName);
+  }
+
+  private void addNativeJavetMode(BuildProducer<NativeImageResourceBuildItem> nativeLibs, NativeConfig nativeConfig,
+      String libPath) {
+    if (libPath.startsWith("/")) {
+      // Guessing, based on https://github.com/quarkusio/quarkus/blob/2.4.0.Final/extensions/kafka-client/deployment/src/main/java/io/quarkus/kafka/client/deployment/KafkaProcessor.java#L255
+      throw new IllegalArgumentException("Resource path should be a classpath entry");
+    }
+    if (libPath.contains("/")) {
+      throw new IllegalArgumentException("Javet lib files are in jar root; didn't expect a slash in path; got " + libPath);
+    }
+    if (!libPath.endsWith(".so")) {
+      throw new IllegalArgumentException("Only targeting linux at the moment; expected lib path to end with .so; got " + libPath);
+    }
     if (nativeConfig.isContainerBuild()) {
-      nativeLibs.produce(new NativeImageResourceBuildItem(modeSpecificLibFileName));
-      LOGGER.info("Added native image resource build item: " + modeSpecificLibFileName);
+      nativeLibs.produce(new NativeImageResourceBuildItem(libPath));
+      LOGGER.info("Added native image resource build item: " + libPath);
     }
     // otherwise the native lib of the platform this build runs on
     else {
-      // https://github.com/quarkusio/quarkus/blob/2.4.0.Final/extensions/kafka-streams/deployment/src/main/java/io/quarkus/kafka/streams/deployment/KafkaStreamsProcessor.java#L130
-      LOGGER.warning("Javet lib loading not implemented for !isContainerBuild");
-      nativeLibs.produce(new NativeImageResourceBuildItem(modeSpecificLibFileName));
-      LOGGER.info("Added native image resource build item: " + modeSpecificLibFileName);
-      //throw new UnsupportedOperationException("Only targeting container build for now");
+      // TODO quarkus-kafka does lib loading here too, is that useful with Javet?
+      throw new UnsupportedOperationException("Custom native lib instrumentation assumes in-container (and native-image) build");
     }
   }
 
   private void enableLoadOfNativeLibs(BuildProducer<RuntimeReinitializedClassBuildItem> reinitialized) {
     // https://github.com/quarkusio/quarkus/blob/2.4.0.Final/extensions/kafka-streams/deployment/src/main/java/io/quarkus/kafka/streams/deployment/KafkaStreamsProcessor.java#L135
+    // TODO do we need re-initialization for Javet?
     reinitialized.produce(new RuntimeReinitializedClassBuildItem(JavetLibLoader.class.getName()));
-  }
-
-  private String extractLibToClasspathFile() {
-    File buildTimeFileClasspath = new File("target/classes/");
-    if (!buildTimeFileClasspath.exists()) {
-      throw new RuntimeException("target/classes/ required for native build, at " + (new File(".")).getAbsolutePath());
-    }
-
-    // V8 only for now
-    JavetLibLoader javetLibLoader = new JavetLibLoader(JSRuntimeType.V8);
-
-    // Call private method
-    Method deployLibFile;
-    try {
-      deployLibFile = JavetLibLoader.class.getDeclaredMethod("deployLibFile", String.class, java.io.File.class);
-    } catch (NoSuchMethodException | SecurityException e) {
-      throw new RuntimeException("TODO handle error", e);
-    }
-    deployLibFile.setAccessible(true);
-
-    // https://github.com/caoccao/Javet/blob/1.0.2/src/main/java/com/caoccao/javet/interop/loader/JavetLibLoader.java#L325
-    if (!JavetOSUtils.IS_LINUX) {
-      throw new RuntimeException("Javet native build should run in Linux; quarkus-javet currently only targets linux containers");
-    }
-    String resourceFileName;
-    try {
-      resourceFileName = javetLibLoader.getResourceFileName();
-    } catch (JavetException e) {
-      throw new RuntimeException("TODO handle error", e);
-    }
-    LOGGER.info("Javet resourceFileName=" + resourceFileName);
-
-    String libFileName;
-    try {
-      libFileName = javetLibLoader.getLibFileName();
-    } catch (JavetException e) {
-      throw new RuntimeException("TODO handle error", e);
-    }
-    LOGGER.info("Javet libFileName=" + libFileName);
-
-    if (!resourceFileName.equals("/" + libFileName)) {
-      throw new RuntimeException("Unexpected resourceFileName " + resourceFileName + " in relation to libFileName " + libFileName);
-    }
-
-    File libFile = new File(buildTimeFileClasspath, libFileName).getAbsoluteFile();
-
-    // https://github.com/caoccao/Javet/blob/1.0.2/src/main/java/com/caoccao/javet/interop/loader/JavetLibLoader.java#L339
-    try {
-      deployLibFile.invoke(javetLibLoader, resourceFileName, libFile);
-    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-      if (e.getCause() instanceof JavetException) {
-        throw new RuntimeException("TODO handle error", e.getCause());
-      }
-      throw new RuntimeException("Failed to access private JavetLibLoader method. Rethink.");
-    }
-
-    File expectExtractedFile = new File(buildTimeFileClasspath, libFileName);
-    if (!expectExtractedFile.exists()) {
-      throw new RuntimeException("Failed to verify that the lib file was extracted at " + expectExtractedFile);
-    }
-    return libFileName;
   }
 
 }

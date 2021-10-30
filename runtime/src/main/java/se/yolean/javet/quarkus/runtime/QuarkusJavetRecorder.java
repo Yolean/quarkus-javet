@@ -1,12 +1,16 @@
 package se.yolean.javet.quarkus.runtime;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.net.URL;
 import java.util.logging.Logger;
 
 import com.caoccao.javet.enums.JSRuntimeType;
-import com.caoccao.javet.interop.loader.IJavetLibLoadingListener;
+import com.caoccao.javet.exceptions.JavetException;
 import com.caoccao.javet.interop.loader.JavetLibLoader;
 import com.caoccao.javet.utils.JavetOSUtils;
 
@@ -17,27 +21,89 @@ public class QuarkusJavetRecorder {
 
   private static final Logger LOGGER = Logger.getLogger(QuarkusJavetRecorder.class.getSimpleName());
 
-  public void loadLibrary() {
-//    LOGGER.info("Disabling Javet's default lib loading");
-//    JavetLibLoader.setLibLoadingListener(new IJavetLibLoadingListener() {
-//      @Override
-//      public boolean isLibInSystemPath(JSRuntimeType jsRuntimeType) {
-//        return true;
-//      }
-//    });
-//
-//    LOGGER.info("Loading library");
-    final String resourceFileName = "/libjavet-v8-linux-x86_64.v.1.0.2.so"; // TODO get from arg or config
-//
-//    InputStream in = this.getClass().getClassLoader().getResourceAsStream(RESOURCE_NAME);
-//
-//    // https://github.com/caoccao/Javet/blob/1.0.2/src/main/java/com/caoccao/javet/interop/loader/JavetLibLoader.java#L347
-//    // https://github.com/quarkusio/quarkus/blob/2.4.0.Final/extensions/kafka-client/runtime/src/main/java/io/quarkus/kafka/client/runtime/KafkaRecorder.java#L49
-//    System.loadLibrary(RESOURCE_NAME);
+  // Workaround for test failures caused by java.lang.UnsatisfiedLinkError: Native Library /tmp/libjavet-v8-linux-x86_64.v.1.0.2.so already loaded in another classloader
+  // Might indicate that we bind the calls to the wrong phases
+  private static boolean loadedV8 = false;
+  private static boolean loadedNode = false;
 
-    checkClassPathResource(resourceFileName);
-    checkDefaultJavetLibExtractionPath();
+  private static JavetLibLoader getJavetLibLoader(JSRuntimeType mode) {
+    return new JavetLibLoader(mode);
   }
+
+  public void loadLibraryModeV8() {
+    if (loadedV8) {
+      LOGGER.warning("Loader method for V8 has already been invoked. Skipping.");
+      return;
+    }
+    loadLibrary(JSRuntimeType.V8);
+    loadedV8 = true;
+  }
+
+  public void loadLibraryModeNode() {
+    if (loadedNode) {
+      LOGGER.warning("Loader method for Node has already been invoked. Skipping.");
+      return;
+    }
+    loadLibrary(JSRuntimeType.Node);
+    loadedNode = true;
+  }
+
+  // https://github.com/quarkusio/quarkus/blob/2.4.0.Final/extensions/kafka-client/runtime/src/main/java/io/quarkus/kafka/client/runtime/KafkaRecorder.java#L23
+  protected void loadLibrary(JSRuntimeType mode) {
+    JavetLibLoadingSetup.disableBuiltInLoader();
+
+    JavetLibLoader loader = getJavetLibLoader(mode);
+    String resourceFileName;
+    try {
+      resourceFileName = loader.getResourceFileName();
+    } catch (JavetException e) {
+      throw new RuntimeException("Failed to get Javet resource file name", e);
+    }
+    if (!hasResource(resourceFileName)) {
+      throw new IllegalStateException("Failed to confirm that classpath has resource: " + resourceFileName);
+    }
+    URL resource = JavetLibLoader.class.getResource(resourceFileName);
+    String libName;
+    try {
+      libName = loader.getLibFileName();
+    } catch (JavetException e) {
+      throw new RuntimeException("Failed to get Javet lib name", e);
+    }
+
+    File out = extractLibraryFile(resource, libName);
+
+    String path = out.getAbsolutePath();
+    LOGGER.info("Loading " + path);
+    System.load(path);
+  }
+
+  // https://github.com/quarkusio/quarkus/blob/2.4.0.Final/extensions/kafka-client/runtime/src/main/java/io/quarkus/kafka/client/runtime/KafkaRecorder.java#L52
+  private static boolean hasResource(String path) {
+    return JavetLibLoader.class.getResource(path) != null;
+  }
+
+  // https://github.com/quarkusio/quarkus/blob/2.4.0.Final/extensions/kafka-client/runtime/src/main/java/io/quarkus/kafka/client/runtime/KafkaRecorder.java#L56
+  private static File extractLibraryFile(URL library, String name) {
+    String tmp = System.getProperty("java.io.tmpdir");
+    File extractedLibFile = new File(tmp, name);
+
+    try (BufferedInputStream inputStream = new BufferedInputStream(library.openStream());
+        FileOutputStream fileOS = new FileOutputStream(extractedLibFile)) {
+      byte[] data = new byte[8192];
+      int byteContent;
+      while ((byteContent = inputStream.read(data, 0, 8192)) != -1) {
+          fileOS.write(data, 0, byteContent);
+      }
+    } catch (IOException e) {
+      throw new UncheckedIOException(
+        "Unable to extract native library " + name + " to " + extractedLibFile.getAbsolutePath(), e);
+    }
+
+    extractedLibFile.deleteOnExit();
+
+    return extractedLibFile;
+  }
+
 
   public static void checkClassPathResource(final String resourceFileName) {
     // https://github.com/caoccao/Javet/blob/1.0.2/src/main/java/com/caoccao/javet/interop/loader/JavetLibLoader.java#L126

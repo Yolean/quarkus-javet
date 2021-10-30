@@ -21,6 +21,7 @@ EXTENSION_BULID_OPTS="-Dmaven.test.skip=true"
 mvn clean install $EXTENSION_BULID_OPTS && (cd integration-tests/; mvn clean verify -Pnative $NATIVE_BUILD_OPTS)
 
 # The quarkus-resteasy hello example executable gets size 50M and we expect the library to be included
+# With both linux lib files included it's at 120M
 du -sh integration-tests/target/quarkus-javet-integration-tests-1.0.0-SNAPSHOT-runner
 # A libjavet file should probably not be present in native image build input because it's embedded with the javet jar
 unzip -lv integration-tests/target/quarkus-javet-integration-tests-1.0.0-SNAPSHOT-native-image-source-jar/quarkus-javet-integration-tests-1.0.0-SNAPSHOT-runner.jar | grep libjavet
