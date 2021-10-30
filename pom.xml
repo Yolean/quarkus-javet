@@ -12,6 +12,7 @@
     <module>runtime</module>
   </modules>
   <properties>
+    <javet.version>1.0.2</javet.version>
     <compiler-plugin.version>3.8.1</compiler-plugin.version>
     <failsafe-plugin.version>${surefire-plugin.version}</failsafe-plugin.version>
     <maven.compiler.parameters>true</maven.compiler.parameters>

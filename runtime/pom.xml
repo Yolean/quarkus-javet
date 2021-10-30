@@ -14,6 +14,11 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-arc</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.caoccao.javet</groupId>
+      <artifactId>javet</artifactId>
+      <version>${javet.version}</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

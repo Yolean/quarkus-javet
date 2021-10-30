@@ -10,12 +10,22 @@ import io.quarkus.test.junit.QuarkusTest;
 @QuarkusTest
 public class QuarkusJavetResourceTest {
 
-    @Test
-    public void testHelloEndpoint() {
-        given()
-                .when().get("/quarkus-javet")
-                .then()
-                .statusCode(200)
-                .body(is("Hello quarkus-javet"));
-    }
+  @Test
+  public void testV8Mode() {
+    given()
+      .when().get("/quarkus-javet/v8")
+      .then()
+      .statusCode(200)
+      .body(is("Javet V8 mode invoked"));
+  }
+
+  @Test
+  public void testNodeMode() {
+    given()
+      .when().get("/quarkus-javet/node")
+      .then()
+      .statusCode(200)
+      .body(is("Javet Node mode invoked"));
+  }
+
 }
