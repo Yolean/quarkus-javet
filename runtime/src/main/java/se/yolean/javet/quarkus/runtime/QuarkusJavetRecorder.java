@@ -35,10 +35,15 @@ public class QuarkusJavetRecorder {
 //    // https://github.com/quarkusio/quarkus/blob/2.4.0.Final/extensions/kafka-client/runtime/src/main/java/io/quarkus/kafka/client/runtime/KafkaRecorder.java#L49
 //    System.loadLibrary(RESOURCE_NAME);
 
+    checkClassPathResource(resourceFileName);
+    checkDefaultJavetLibExtractionPath();
+  }
+
+  public static void checkClassPathResource(final String resourceFileName) {
     // https://github.com/caoccao/Javet/blob/1.0.2/src/main/java/com/caoccao/javet/interop/loader/JavetLibLoader.java#L126
     InputStream inputStream = JavetLibLoader.class.getResourceAsStream(resourceFileName);
     if (inputStream == null) {
-      throw new RuntimeException("Javet JNI library not found in classpath: " + resourceFileName);
+      throw new RuntimeException("Resource not found in classpath: " + resourceFileName);
     } else {
       byte[] buffer = new byte[4096];
       int size = 0;
@@ -54,8 +59,11 @@ public class QuarkusJavetRecorder {
         }
         size += length;
       }
-      LOGGER.info("Resource " + resourceFileName + " size in bytes: " + size);
+      LOGGER.info("Resource " + resourceFileName + " size " + size + " found in classpath");
     }
+  }
+
+  protected void checkDefaultJavetLibExtractionPath() {
     File extractionParent = new File(JavetOSUtils.TEMP_DIRECTORY);
     if (!extractionParent.exists()) {
       throw new RuntimeException("Default extraction parent not found: " + extractionParent);
@@ -65,7 +73,7 @@ public class QuarkusJavetRecorder {
     if (!extractionParent.canWrite()) {
       throw new RuntimeException("Default extraction parent not writable: " + extractionParent);
     } else {
-      LOGGER.info("Extraction parent apperas writable: " + extractionParent);
+      LOGGER.info("Extraction parent appears writable: " + extractionParent);
     }
     LOGGER.info("Checks ok. Javet's default lib loading should be fine.");
   }
