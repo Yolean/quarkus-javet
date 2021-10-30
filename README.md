@@ -16,7 +16,9 @@ NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.builder-image=quay.io/qua
 NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.enable-reports=true"
 # Get stdout from container-build docker run
 NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.container-runtime-options=-ti"
-mvn clean install; (cd integration-tests/; mvn clean verify -Pnative $NATIVE_BUILD_OPTS)
+# How do we avoid custom lib loading in non-native builds and tests?
+EXTENSION_BULID_OPTS="-Dmaven.test.skip=true"
+mvn clean install $EXTENSION_BULID_OPTS && (cd integration-tests/; mvn clean verify -Pnative $NATIVE_BUILD_OPTS)
 
 # The quarkus-resteasy hello example executable gets size 50M and we expect the library to be included
 du -sh integration-tests/target/quarkus-javet-integration-tests-1.0.0-SNAPSHOT-runner
