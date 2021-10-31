@@ -1,23 +1,73 @@
+# Quarkus Javet Extension
 
+The goal is to take care of native builds and [CDI](https://quarkus.io/guides/cdi-reference) aspects so that the [Javet](https://www.caoccao.com/Javet/) library can stay framework agnostic and Quarkus-based applications can do
 
-## The problem
+```java
+  @Inject
+  V8Host v8host; // V8 mode
 
-Javet's built-in lib loading uses varying paths under `/tmp/javet`.
-While using /tmp for a JNI lib is fine (so does [quarkus-kafka](https://github.com/quarkusio/quarkus/blob/2.4.0.Final/extensions/kafka-client/runtime/src/main/java/io/quarkus/kafka/client/runtime/KafkaRecorder.java#L56))
-the difference in path is difficult to manage because native builds
-initialize classes at build time.
-The native-image binary is later copied to a container image,
-without an accompanying file system.
+  @Inject
+  @Named("Node") // See JSRuntimeType
+  V8Host v8host;
+```
+
+Also the extension should support [native image builds](https://quarkus.io/guides/building-native-image).
+The resulting binary should be compatible with [distroless](https://quarkus.io/guides/building-native-image#using-a-distroless-base-image]) images.
 
 ## Current status
 
-Current ambition is to produce a linux x64 native-image that embeds libjavet*.so,
-and could run on a distroless base image.
+First goal is to tweak/override JNI lib loading so that it works in Linux x86 native images. We're not there.
 
-With built-in JNI library loading replaced with build-time Quarkus processing, 
-and [jni-config.json] generated through [native tracing](#nativetracing),
-we get a native-image that loads Javet but fails to run V8 at:
+[Javet's way to customize lib loading](https://www.caoccao.com/Javet/reference/resource_management/load_and_unload.html#can-javet-native-library-be-deployed-to-a-custom-location) gets complex when combined with how GraalVM, and to some degree Quarkus, configures and instantiates classes at build time.
 
+### Library loading
+
+The Quarkus extension works insofar that it propagates the Javet dependency
+and that native-builds contain the two Linx x86 .so library resources.
+
+### Native compile
+
+Despite attempts to [disable built-in library loading](https://www.caoccao.com/Javet/reference/resource_management/load_and_unload.html#can-javet-native-library-deployment-be-skipped) native compile prints errors such as `java.lang.UnsatisfiedLinkError: /tmp/javet/52/libjavet-node-linux-x86_64.v.1.0.2.so: /lib64/libm.so.6: version `GLIBC_2.29' not found (required by /tmp/javet/52/libjavet-node-linux-x86_64.v.1.0.2.so)`. However the libraries get included anyway,
+so this is probably not a blocker.
+
+### Runtime library loading
+
+With built-in JNI library loading replaced with build-time Quarkus processing,
+
+Without jni-config.json (OR the processor adding JniRuntimeAccessBuildItem?) we get an NPE from [JNIFunctions.java](https://github.com/oracle/graal/blob/vm-ce-21.3.0/substratevm/src/com.oracle.svm.jni/src/com/oracle/svm/jni/functions/JNIFunctions.java#L1095) that doesn't say which class is missing.
+
+With [jni-config.json](runtime/src/main/resources/META-INF/native-image/jni-config.json) generated through [native tracing](#nativetracing) native compile bails with:
+
+```
+Error: Error parsing JNI configuration in jar:file:/project/lib/se.yolean.javet.quarkus-javet-1.0.0-SNAPSHOT.jar!/META-INF/native-image/jni-config.json:
+Method com.caoccao.javet.values.reference.IV8Module.getHandle() not found. To allow unresolvable reflection configuration, use option --allow-incomplete-classpath
+Verify that the configuration matches the schema described in the -H:PrintFlags=+ output for option JNIConfigurationResources.
+com.oracle.svm.core.util.UserError$UserException: Error parsing JNI configuration in jar:file:/project/lib/se.yolean.javet.quarkus-javet-1.0.0-SNAPSHOT.jar!/META-INF/native-image/jni-config.json:
+Method com.caoccao.javet.values.reference.IV8Module.getHandle() not found. To allow unresolvable reflection configuration, use option --allow-incomplete-classpath
+Verify that the configuration matches the schema described in the -H:PrintFlags=+ output for option JNIConfigurationResources.
+	at com.oracle.svm.core.util.UserError.abort(UserError.java:73)
+	at com.oracle.svm.hosted.config.ConfigurationParserUtils.doParseAndRegister(ConfigurationParserUtils.java:135)
+```
+
+BUT with the following patch:
+
+```
+diff --git a/runtime/src/main/resources/META-INF/native-image/jni-config.json b/runtime/src/main/resources/META-INF/native-image/jni-config.json
+index 924061a..b803448 100644
+--- a/runtime/src/main/resources/META-INF/native-image/jni-config.json
++++ b/runtime/src/main/resources/META-INF/native-image/jni-config.json
+@@ -131,7 +131,7 @@
+ ,
+ {
+   "name":"com.caoccao.javet.values.reference.IV8Module",
+-  "methods":[{"name":"getHandle","parameterTypes":[] }]}
++  "allPublicMethods":true}
+ ,
+ {
+   "name":"com.caoccao.javet.values.reference.IV8ValueReference",
+```
+
+the test instead fails on:
 
 ```
 2021-10-31 08:34:32,285 INFO  [JavetLibLoadingSetup] (main) Disabling Javet's built-in lib loader
@@ -60,19 +110,20 @@ Caused by: com.caoccao.javet.exceptions.JavetException: Failed to read /tmp/jave
 Caused by: java.lang.UnsatisfiedLinkError: /tmp/javet/52/libjavet-v8-linux-x86_64.v.1.0.2.so: /lib64/libstdc++.so.6: version `GLIBCXX_3.4.26' not found (required by /tmp/javet/52/libjavet-v8-linux-x86_64.v.1.0.2.so)
 ```
 
-Without jni-config.json we get an NPE from [JNIFunctions.java](https://github.com/oracle/graal/blob/vm-ce-21.3.0/substratevm/src/com.oracle.svm.jni/src/com/oracle/svm/jni/functions/JNIFunctions.java#L1095) that doesn't say which class is missing.
+## Devloop
 
-## test
-
-```
-mvn clean install; (cd integration-tests/; mvn clean test)
-```
-
-TODO [docs](https://quarkus.io/guides/writing-extensions#multi-module-maven-projects-and-the-development-mode) mention that the example project can be part of the multi-module project, but we wouldn't want to deploy it to central
-
-## native test
+Without native build (this mode currently doesn't do anything useful);
 
 ```
+mvn clean install && (cd integration-tests/; mvn clean test)
+```
+
+## Native test
+
+Quarkus [docs](https://quarkus.io/guides/writing-extensions#multi-module-maven-projects-and-the-development-mode) mention that the example project can be part of the multi-module project, but we wouldn't want to deploy it to central. Until the matter is settled we build them using the one-liner below:
+
+```
+# Opts depend on the build and test environment
 NATIVE_BUILD_OPTS="-Dquarkus.native.remote-container-build=true"
 NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel:21.3-java11"
 NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.enable-reports=true"
@@ -80,14 +131,12 @@ NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.enable-reports=true"
 NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.container-runtime-options=-ti"
 # How do we avoid custom lib loading in non-native builds and tests?
 EXTENSION_BULID_OPTS="-Dmaven.test.skip=true"
+# Run the test
 mvn clean install $EXTENSION_BULID_OPTS && (cd integration-tests/; mvn clean verify -Pnative $NATIVE_BUILD_OPTS)
 
 # The quarkus-resteasy hello example executable gets size 50M and we expect the library to be included
 # With both linux lib files included it's at 120M
 du -sh integration-tests/target/quarkus-javet-integration-tests-1.0.0-SNAPSHOT-runner
-# A libjavet file should probably not be present in native image build input because it's embedded with the javet jar
-unzip -lv integration-tests/target/quarkus-javet-integration-tests-1.0.0-SNAPSHOT-native-image-source-jar/quarkus-javet-integration-tests-1.0.0-SNAPSHOT-runner.jar | grep libjavet
-ls -l integration-tests/target/quarkus-javet-integration-tests-1.0.0-SNAPSHOT-native-image-source-jar/lib/ | grep com.caoccao.javet.javet
 ```
 
 ## TODO option for not embedding libs
