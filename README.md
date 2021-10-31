@@ -1,5 +1,14 @@
 
 
+## The problem
+
+Javet's built-in lib loading uses varying paths under `/tmp/javet`.
+While using /tmp for a JNI lib is fine (quarkus-kafka does that too)
+the difference in path is difficult to manage because native builds
+initialize classes at build time.
+The native-image binary is later copied to a container image,
+without an accompanying file system.
+
 ## test
 
 ```
@@ -27,6 +36,43 @@ du -sh integration-tests/target/quarkus-javet-integration-tests-1.0.0-SNAPSHOT-r
 unzip -lv integration-tests/target/quarkus-javet-integration-tests-1.0.0-SNAPSHOT-native-image-source-jar/quarkus-javet-integration-tests-1.0.0-SNAPSHOT-runner.jar | grep libjavet
 ls -l integration-tests/target/quarkus-javet-integration-tests-1.0.0-SNAPSHOT-native-image-source-jar/lib/ | grep com.caoccao.javet.javet
 ```
+
+## Current status
+
+Runtime crashes at:
+https://github.com/oracle/graal/blob/vm-ce-21.3.0/substratevm/src/com.oracle.svm.jni/src/com/oracle/svm/jni/functions/JNIFunctions.java#L1095
+
+Attempts to disable lib loading fail, so native compile prints this error (but continues):
+
+```
+05:32:39,507 INFO  [QuarkusJavetStaticInit] Disabling built-in lib loading
+05:32:39,529 INFO  [JavetLibLoadingSetup] Disabling Javet's built-in lib loader
+05:33:01,386 SEVERE [com.cao.jav.int.loa.JavetLibLoader] /tmp/javet/52/libjavet-v8-linux-x86_64.v.1.0.2.so: /lib64/libstdc++.so.6: version `GLIBCXX_3.4.26 not found (required by /tmp/javet/52/libjavet-v8-linux-x86_64.v.1.0.2.so)
+05:33:01,391 SEVERE [com.cao.jav.int.loa.JavetLibLoader] java.lang.UnsatisfiedLinkError: /tmp/javet/52/libjavet-v8-linux-x86_64.v.1.0.2.so: /lib64/libstdc++.so.6: version `GLIBCXX_3.4.26' not found (required by /tmp/javet/52/libjavet-v8-linux-x86_64.v.1.0.2.so)
+	at java.base/java.lang.ClassLoader$NativeLibrary.load0(Native Method)
+	at java.base/java.lang.ClassLoader$NativeLibrary.load(ClassLoader.java:2442)
+	at java.base/java.lang.ClassLoader$NativeLibrary.loadLibrary(ClassLoader.java:2498)
+	at java.base/java.lang.ClassLoader.loadLibrary0(ClassLoader.java:2694)
+	at java.base/java.lang.ClassLoader.loadLibrary(ClassLoader.java:2627)
+	at java.base/java.lang.Runtime.load0(Runtime.java:768)
+	at java.base/java.lang.System.load(System.java:1837)
+	at com.caoccao.javet.interop.loader.JavetLibLoader.load(JavetLibLoader.java:349)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at com.caoccao.javet.interop.JavetClassLoader.load(JavetClassLoader.java:85)
+	at com.caoccao.javet.interop.V8Host.loadLibrary(V8Host.java:417)
+	at com.caoccao.javet.interop.V8Host.<init>(V8Host.java:67)
+	at com.caoccao.javet.interop.V8Host.<init>(V8Host.java:41)
+	at com.caoccao.javet.interop.V8Host$V8InstanceHolder.<clinit>(V8Host.java:478)
+```
+
+## TODO option for not embedding libs
+
+For runtime images that can embed the two libjavet .so files
+it saves aboud 70MB of native-image binary size if the base image
+contains libjavet files. They must match the Javet version.
 
 ## Eclipse
 

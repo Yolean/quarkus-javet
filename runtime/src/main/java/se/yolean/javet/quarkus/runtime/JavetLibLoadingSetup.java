@@ -12,17 +12,12 @@ public class JavetLibLoadingSetup {
 
   static final IJavetLibLoadingListener DISABLED = new Disabled();
 
-  private static IJavetLibLoadingListener current = null;
-
   public static void disableBuiltInLoader() {
-    if (current == DISABLED) return;
     LOGGER.info("Disabling Javet's built-in lib loader");
     changeTo(DISABLED);
   }
 
   private static void changeTo(IJavetLibLoadingListener to) {
-    if (current == to) throw new IllegalStateException("Already set to " + current);
-    current = to;
     JavetLibLoader.setLibLoadingListener(DISABLED);
   }
 
