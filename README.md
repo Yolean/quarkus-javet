@@ -74,7 +74,7 @@ TODO [docs](https://quarkus.io/guides/writing-extensions#multi-module-maven-proj
 
 ```
 NATIVE_BUILD_OPTS="-Dquarkus.native.remote-container-build=true"
-NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel:21.3.0.0-Final-java11@sha256:0ad1f11718d7a94e97d368f13c93a6b52eec82fb3d196c0fb2593a9685894ffa"
+NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel:21.3-java11"
 NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.enable-reports=true"
 # Get stdout from container-build docker run
 NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.container-runtime-options=-ti"
