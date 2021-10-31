@@ -50,7 +50,7 @@ public class QuarkusJavetRecorder {
 
   // https://github.com/quarkusio/quarkus/blob/2.4.0.Final/extensions/kafka-client/runtime/src/main/java/io/quarkus/kafka/client/runtime/KafkaRecorder.java#L23
   protected void loadLibrary(JSRuntimeType mode) {
-    JavetLibLoadingSetup.disableBuiltInLoader();
+    JavetLibLoadingSetup.forNative();
 
     JavetLibLoader loader = getJavetLibLoader(mode);
     String resourceFileName;
@@ -84,7 +84,7 @@ public class QuarkusJavetRecorder {
 
   // https://github.com/quarkusio/quarkus/blob/2.4.0.Final/extensions/kafka-client/runtime/src/main/java/io/quarkus/kafka/client/runtime/KafkaRecorder.java#L56
   private static File extractLibraryFile(URL library, String name) {
-    String tmp = System.getProperty("java.io.tmpdir");
+    String tmp = JavetLibLoadingSetup.getSystemTemp();
     File extractedLibFile = new File(tmp, name);
 
     try (BufferedInputStream inputStream = new BufferedInputStream(library.openStream());
@@ -103,7 +103,6 @@ public class QuarkusJavetRecorder {
 
     return extractedLibFile;
   }
-
 
   public static void checkClassPathResource(final String resourceFileName) {
     // https://github.com/caoccao/Javet/blob/1.0.2/src/main/java/com/caoccao/javet/interop/loader/JavetLibLoader.java#L126

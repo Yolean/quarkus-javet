@@ -10,8 +10,8 @@ public class QuarkusJavetStaticInit {
   private static final Logger LOGGER = Logger.getLogger(QuarkusJavetStaticInit.class.getSimpleName());
 
   public void disableBuiltInLibLoading() {
-    LOGGER.info("Disabling built-in lib loading");
-    JavetLibLoadingSetup.disableBuiltInLoader();
+    LOGGER.info("Calling lib loading setup");
+    JavetLibLoadingSetup.forNative();
   }
 
 }

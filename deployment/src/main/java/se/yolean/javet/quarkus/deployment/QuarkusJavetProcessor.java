@@ -62,7 +62,7 @@ class QuarkusJavetProcessor {
       return;
     }
 
-    JavetLibLoadingSetup.disableBuiltInLoader();
+    JavetLibLoadingSetup.forNative();
 
     for (JSRuntimeType mode : getRuntimeTypes()) {
       addNativeJavetMode(nativeLibs, config, mode);
