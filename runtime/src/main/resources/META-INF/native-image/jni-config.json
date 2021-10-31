@@ -1,0 +1,253 @@
+[
+{
+  "name":"com.caoccao.javet.exceptions.JavetCompilationException",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","int","int","int","int","int"] }]}
+,
+{
+  "name":"com.caoccao.javet.exceptions.JavetConverterException"}
+,
+{
+  "name":"com.caoccao.javet.exceptions.JavetExecutionException",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","int","int","int","int","int"] }]}
+,
+{
+  "name":"com.caoccao.javet.exceptions.JavetTerminatedException",
+  "methods":[{"name":"<init>","parameterTypes":["boolean"] }]}
+,
+{
+  "name":"com.caoccao.javet.interop.V8Host",
+  "methods":[{"name":"isLibraryReloadable","parameterTypes":[] }]}
+,
+{
+  "name":"com.caoccao.javet.interop.V8Inspector",
+  "methods":[
+    {"name":"flushProtocolNotifications","parameterTypes":[] }, 
+    {"name":"getName","parameterTypes":[] }, 
+    {"name":"receiveNotification","parameterTypes":["java.lang.String"] }, 
+    {"name":"receiveResponse","parameterTypes":["java.lang.String"] }, 
+    {"name":"runIfWaitingForDebugger","parameterTypes":["int"] }
+  ]}
+,
+{
+  "name":"com.caoccao.javet.interop.V8Runtime",
+  "methods":[
+    {"name":"createV8ValueBoolean","parameterTypes":["boolean"] }, 
+    {"name":"createV8ValueInteger","parameterTypes":["int"] }, 
+    {"name":"createV8ValueLong","parameterTypes":["long"] }, 
+    {"name":"createV8ValueNull","parameterTypes":[] }, 
+    {"name":"createV8ValueUndefined","parameterTypes":[] }, 
+    {"name":"getV8Module","parameterTypes":["java.lang.String","com.caoccao.javet.values.reference.IV8Module"] }, 
+    {"name":"receivePromiseRejectCallback","parameterTypes":["int","com.caoccao.javet.values.reference.V8ValuePromise","com.caoccao.javet.values.V8Value"] }, 
+    {"name":"removeCallbackContext","parameterTypes":["long"] }
+  ]}
+,
+{
+  "name":"com.caoccao.javet.interop.callback.JavetCallbackContext",
+  "methods":[
+    {"name":"isReturnResult","parameterTypes":[] }, 
+    {"name":"isThisObjectRequired","parameterTypes":[] }, 
+    {"name":"setHandle","parameterTypes":["long"] }
+  ]}
+,
+{
+  "name":"com.caoccao.javet.interop.callback.V8FunctionCallback",
+  "methods":[{"name":"receiveCallback","parameterTypes":["com.caoccao.javet.interop.V8Runtime","com.caoccao.javet.interop.callback.JavetCallbackContext","com.caoccao.javet.values.V8Value","com.caoccao.javet.values.reference.V8ValueArray"] }]}
+,
+{
+  "name":"com.caoccao.javet.interop.monitoring.V8HeapSpaceStatistics",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.String","int","int","int","int"] }]}
+,
+{
+  "name":"com.caoccao.javet.interop.monitoring.V8HeapStatistics",
+  "methods":[{"name":"<init>","parameterTypes":["int","int","int","int","int","int","int","int","int","int","int","int","int","int"] }]}
+,
+{
+  "name":"com.caoccao.javet.interop.monitoring.V8SharedMemoryStatistics",
+  "methods":[{"name":"<init>","parameterTypes":["int","int","int"] }]}
+,
+{
+  "name":"com.caoccao.javet.interop.options.NodeRuntimeOptions",
+  "methods":[{"name":"getConsoleArguments","parameterTypes":[] }]}
+,
+{
+  "name":"com.caoccao.javet.interop.options.V8RuntimeOptions",
+  "methods":[{"name":"getGlobalName","parameterTypes":[] }]}
+,
+{
+  "name":"com.caoccao.javet.utils.JavetResourceUtils",
+  "methods":[{"name":"safeClose","parameterTypes":["java.lang.Object"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.primitive.V8ValueBoolean",
+  "methods":[
+    {"name":"<init>","parameterTypes":["boolean"] }, 
+    {"name":"toPrimitive","parameterTypes":[] }
+  ]}
+,
+{
+  "name":"com.caoccao.javet.values.primitive.V8ValueDouble",
+  "methods":[
+    {"name":"<init>","parameterTypes":["double"] }, 
+    {"name":"toPrimitive","parameterTypes":[] }
+  ]}
+,
+{
+  "name":"com.caoccao.javet.values.primitive.V8ValueInteger",
+  "methods":[
+    {"name":"<init>","parameterTypes":["int"] }, 
+    {"name":"toPrimitive","parameterTypes":[] }
+  ]}
+,
+{
+  "name":"com.caoccao.javet.values.primitive.V8ValueLong",
+  "methods":[
+    {"name":"<init>","parameterTypes":["long"] }, 
+    {"name":"toPrimitive","parameterTypes":[] }
+  ]}
+,
+{
+  "name":"com.caoccao.javet.values.primitive.V8ValueNull"}
+,
+{
+  "name":"com.caoccao.javet.values.primitive.V8ValueString",
+  "methods":[
+    {"name":"<init>","parameterTypes":["java.lang.String"] }, 
+    {"name":"toPrimitive","parameterTypes":[] }
+  ]}
+,
+{
+  "name":"com.caoccao.javet.values.primitive.V8ValueUndefined"}
+,
+{
+  "name":"com.caoccao.javet.values.primitive.V8ValueUnknown",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.String"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.primitive.V8ValueZonedDateTime",
+  "methods":[
+    {"name":"<init>","parameterTypes":["long"] }, 
+    {"name":"toPrimitive","parameterTypes":[] }
+  ]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.IV8Module",
+  "allPublicMethods":true}
+,
+{
+  "name":"com.caoccao.javet.values.reference.IV8ValueReference",
+  "methods":[{"name":"close","parameterTypes":["boolean"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8Module",
+  "methods":[{"name":"<init>","parameterTypes":["long"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8Script",
+  "methods":[{"name":"<init>","parameterTypes":["long"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8ValueArguments",
+  "methods":[{"name":"<init>","parameterTypes":["long"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8ValueArray",
+  "methods":[{"name":"<init>","parameterTypes":["long"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8ValueArrayBuffer",
+  "methods":[{"name":"<init>","parameterTypes":["long","java.nio.ByteBuffer"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8ValueDataView",
+  "methods":[{"name":"<init>","parameterTypes":["long"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8ValueError",
+  "methods":[{"name":"<init>","parameterTypes":["long"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8ValueFunction",
+  "methods":[{"name":"<init>","parameterTypes":["long"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8ValueGlobalObject",
+  "methods":[{"name":"<init>","parameterTypes":["long"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8ValueIterator",
+  "methods":[{"name":"<init>","parameterTypes":["long"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8ValueMap",
+  "methods":[{"name":"<init>","parameterTypes":["long"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8ValueObject",
+  "methods":[{"name":"<init>","parameterTypes":["long"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8ValuePromise",
+  "methods":[{"name":"<init>","parameterTypes":["long"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8ValueProxy",
+  "methods":[{"name":"<init>","parameterTypes":["long"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8ValueReference",
+  "methods":[{"name":"getHandle","parameterTypes":[] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8ValueRegExp",
+  "methods":[{"name":"<init>","parameterTypes":["long"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8ValueSet",
+  "methods":[{"name":"<init>","parameterTypes":["long"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8ValueSharedArrayBuffer",
+  "methods":[{"name":"<init>","parameterTypes":["long","java.nio.ByteBuffer"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8ValueSymbol",
+  "methods":[{"name":"<init>","parameterTypes":["long"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8ValueSymbolObject",
+  "methods":[{"name":"<init>","parameterTypes":["long"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8ValueTypedArray",
+  "methods":[{"name":"<init>","parameterTypes":["long","int"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8ValueWeakMap",
+  "methods":[{"name":"<init>","parameterTypes":["long"] }]}
+,
+{
+  "name":"com.caoccao.javet.values.reference.V8ValueWeakSet",
+  "methods":[{"name":"<init>","parameterTypes":["long"] }]}
+,
+{
+  "name":"java.lang.Boolean",
+  "methods":[{"name":"getBoolean","parameterTypes":["java.lang.String"] }]}
+,
+{
+  "name":"java.lang.Throwable",
+  "methods":[{"name":"getMessage","parameterTypes":[] }]}
+,
+{
+  "name":"sun.management.VMManagementImpl",
+  "fields":[
+    {"name":"compTimeMonitoringSupport"}, 
+    {"name":"currentThreadCpuTimeSupport"}, 
+    {"name":"objectMonitorUsageSupport"}, 
+    {"name":"otherThreadCpuTimeSupport"}, 
+    {"name":"remoteDiagnosticCommandsSupport"}, 
+    {"name":"synchronizerUsageSupport"}, 
+    {"name":"threadAllocatedMemorySupport"}, 
+    {"name":"threadContentionMonitoringSupport"}
+  ]}
+
+]

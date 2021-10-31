@@ -90,7 +90,11 @@ class QuarkusJavetProcessor {
   }
 
   private void registerClassesThatAreAccessedViaJni(BuildProducer<JniRuntimeAccessBuildItem> jniRuntimeAccessibleClasses) {
-    // TODO any such classes in Javet?
+    // Also relying on jni-config.json because unlike regular reflection issues that typically state the missing class
+    // native JNI sometimes throws NPE at https://github.com/oracle/graal/blob/vm-ce-21.3.0/substratevm/src/com.oracle.svm.jni/src/com/oracle/svm/jni/functions/JNIFunctions.java#L1095
+    jniRuntimeAccessibleClasses.produce(new JniRuntimeAccessBuildItem(true, false, false,
+        com.caoccao.javet.values.reference.IV8Module.class
+        ));
   }
 
   private void addNativeJavetMode(BuildProducer<NativeImageResourceBuildItem> nativeLibs, NativeConfig nativeConfig,
