@@ -70,44 +70,31 @@ index 924061a..b803448 100644
 the test instead fails on:
 
 ```
-2021-10-31 08:34:32,285 INFO  [JavetLibLoadingSetup] (main) Disabling Javet's built-in lib loader
-2021-10-31 08:34:32,299 INFO  [QuarkusJavetRecorder] (main) Loading /tmp/libjavet-v8-linux-x86_64.v.1.0.2.so
-2021-10-31 08:34:32,302 INFO  [JavetLibLoadingSetup] (main) Disabling Javet's built-in lib loader
-2021-10-31 08:34:32,336 INFO  [QuarkusJavetRecorder] (main) Loading /tmp/libjavet-node-linux-x86_64.v.1.0.2.so
-2021-10-31 08:34:32,349 INFO  [io.quarkus] (main) quarkus-javet-integration-tests 1.0.0-SNAPSHOT native (powered by Quarkus 2.4.0.Final) started in 0.068s. Listening on: http://0.0.0.0:8081
-2021-10-31 08:34:32,349 INFO  [io.quarkus] (main) Profile prod activated. 
-2021-10-31 08:34:32,349 INFO  [io.quarkus] (main) Installed features: [cdi, javet, resteasy, smallrye-context-propagation, vertx]
-[ERROR] WARNING: An illegal reflective access operation has occurred
-[ERROR] WARNING: Illegal reflective access by org.codehaus.groovy.vmplugin.v9.Java9 (file:/home/solsson/.m2/repository/org/codehaus/groovy/groovy/3.0.8/groovy-3.0.8.jar) to constructor java.lang.AssertionError(java.lang.String)
-[ERROR] WARNING: Please consider reporting this to the maintainers of org.codehaus.groovy.vmplugin.v9.Java9
-[ERROR] WARNING: Use --illegal-access=warn to enable warnings of further illegal reflective access operations
-[ERROR] WARNING: All illegal access operations will be denied in a future release
-2021-10-31 08:34:33,391 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (executor-thread-0) HTTP Request to /quarkus-javet/v8 failed, error id: b5e14f63-5eaf-4f21-aff9-0f25f8a1d485-1: org.jboss.resteasy.spi.UnhandledException: com.caoccao.javet.exceptions.JavetException: Javet library is not loaded because <null>
-	at org.jboss.resteasy.core.ExceptionHandler.handleApplicationException(ExceptionHandler.java:106)
-	at org.jboss.resteasy.core.ExceptionHandler.handleException(ExceptionHandler.java:372)
-	at org.jboss.resteasy.core.SynchronousDispatcher.writeException(SynchronousDispatcher.java:218)
-	at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:519)
-	at org.jboss.resteasy.core.SynchronousDispatcher.lambda$invoke$4(SynchronousDispatcher.java:261)
-	at org.jboss.resteasy.core.SynchronousDispatcher.lambda$preprocess$0(SynchronousDispatcher.java:161)
-	at org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext.filter(PreMatchContainerRequestContext.java:364)
-	at org.jboss.resteasy.core.SynchronousDispatcher.preprocess(SynchronousDispatcher.java:164)
-	at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:247)
-	at io.quarkus.resteasy.runtime.standalone.RequestDispatcher.service(RequestDispatcher.java:73)
-	at io.quarkus.resteasy.runtime.standalone.VertxRequestHandler.dispatch(VertxRequestHandler.java:135)
-	at io.quarkus.resteasy.runtime.standalone.VertxRequestHandler$1.run(VertxRequestHandler.java:90)
-	at io.quarkus.vertx.core.runtime.VertxCoreRecorder$13.runWith(VertxCoreRecorder.java:543)
-	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)
-	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)
-	at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)
-	at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)
-	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
-	at java.lang.Thread.run(Thread.java:829)
-	at com.oracle.svm.core.thread.JavaThreads.threadStartRoutine(JavaThreads.java:596)
-	at com.oracle.svm.core.posix.thread.PosixJavaThreads.pthreadStartRoutine(PosixJavaThreads.java:192)
-Caused by: com.caoccao.javet.exceptions.JavetException: Javet library is not loaded because <null>
-Caused by: java.lang.reflect.InvocationTargetException
-Caused by: com.caoccao.javet.exceptions.JavetException: Failed to read /tmp/javet/52/libjavet-v8-linux-x86_64.v.1.0.2.so
-Caused by: java.lang.UnsatisfiedLinkError: /tmp/javet/52/libjavet-v8-linux-x86_64.v.1.0.2.so: /lib64/libstdc++.so.6: version `GLIBCXX_3.4.26' not found (required by /tmp/javet/52/libjavet-v8-linux-x86_64.v.1.0.2.so)
+ERROR: Failed to start application (with profile prod)
+java.lang.NoSuchMethodError: com.caoccao.javet.interop.V8Runtime.gcPrologueCallback(II)V
+	at com.oracle.svm.jni.functions.JNIFunctions$Support.getMethodID(JNIFunctions.java:1114)
+	at com.oracle.svm.jni.functions.JNIFunctions$Support.getMethodID(JNIFunctions.java:1099)
+	at com.oracle.svm.jni.functions.JNIFunctions.GetMethodID(JNIFunctions.java:410)
+	at com.oracle.svm.jni.JNIOnLoadFunctionPointer.invoke(JNILibraryInitializer.java)
+	at com.oracle.svm.jni.JNILibraryInitializer.callOnLoadFunction(JNILibraryInitializer.java:72)
+	at com.oracle.svm.jni.JNILibraryInitializer.initialize(JNILibraryInitializer.java:129)
+	at com.oracle.svm.core.jdk.NativeLibrarySupport.addLibrary(NativeLibrarySupport.java:186)
+	at com.oracle.svm.core.jdk.NativeLibrarySupport.loadLibrary0(NativeLibrarySupport.java:142)
+	at com.oracle.svm.core.jdk.NativeLibrarySupport.loadLibraryAbsolute(NativeLibrarySupport.java:101)
+	at java.lang.ClassLoader.loadLibrary(ClassLoader.java:131)
+	at java.lang.Runtime.load0(Runtime.java:768)
+	at java.lang.System.load(System.java:1837)
+	at se.yolean.javet.quarkus.runtime.QuarkusJavetRecorder.loadLibrary(QuarkusJavetRecorder.java:77)
+	at se.yolean.javet.quarkus.runtime.QuarkusJavetRecorder.loadLibraryModeV8(QuarkusJavetRecorder.java:38)
+	at io.quarkus.deployment.steps.QuarkusJavetProcessor$registerLibraryRecorder-673605450.deploy_0(QuarkusJavetProcessor$registerLibraryRecorder-673605450.zig:69)
+	at io.quarkus.deployment.steps.QuarkusJavetProcessor$registerLibraryRecorder-673605450.deploy(QuarkusJavetProcessor$registerLibraryRecorder-673605450.zig:40)
+	at io.quarkus.runner.ApplicationImpl.doStart(ApplicationImpl.zig:358)
+	at io.quarkus.runtime.Application.start(Application.java:101)
+	at io.quarkus.runtime.ApplicationLifecycleManager.run(ApplicationLifecycleManager.java:105)
+	at io.quarkus.runtime.Quarkus.run(Quarkus.java:67)
+	at io.quarkus.runtime.Quarkus.run(Quarkus.java:41)
+	at io.quarkus.runtime.Quarkus.run(Quarkus.java:120)
+	at io.quarkus.runner.GeneratedMain.main(GeneratedMain.zig:29)
 ```
 
 ## Devloop
@@ -130,8 +117,8 @@ NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.enable-reports=true"
 # Get stdout from container-build docker run
 NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.container-runtime-options=-ti"
 # https://github.com/caoccao/Javet/commit/a7dc048b665166d77c532f066281282fb7cdb1de
-NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Djavet.lib.loading.path=/tmp"
-NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.additional-build-args=-J-Djavet.lib.loading.path=/tmp"
+#NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Djavet.lib.loading.type=system"
+NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.additional-build-args=-J-Djavet.lib.loading.type=custom,-J-Djavet.lib.loading.path=/tmp"
 # How do we avoid custom lib loading in non-native builds and tests?
 EXTENSION_BULID_OPTS="-Dmaven.test.skip=true"
 # Run the test
