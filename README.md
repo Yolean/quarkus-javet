@@ -129,6 +129,9 @@ NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.builder-image=quay.io/qua
 NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.enable-reports=true"
 # Get stdout from container-build docker run
 NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.container-runtime-options=-ti"
+# https://github.com/caoccao/Javet/commit/a7dc048b665166d77c532f066281282fb7cdb1de
+NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Djavet.lib.loading.path=/tmp"
+NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.additional-build-args=-J-Djavet.lib.loading.path=/tmp"
 # How do we avoid custom lib loading in non-native builds and tests?
 EXTENSION_BULID_OPTS="-Dmaven.test.skip=true"
 # Run the test
