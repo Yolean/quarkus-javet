@@ -5,10 +5,6 @@ The goal is to take care of native builds and [CDI](https://quarkus.io/guides/cd
 ```java
   @Inject
   V8Host v8host; // V8 mode
-
-  @Inject
-  @Named("Node") // See JSRuntimeType
-  V8Host v8host;
 ```
 
 Also the extension should support [native image builds](https://quarkus.io/guides/building-native-image).
@@ -31,8 +27,6 @@ Despite attempts to [disable built-in library loading](https://www.caoccao.com/J
 so this is probably not a blocker.
 
 ### Runtime library loading
-
-With built-in JNI library loading replaced with build-time Quarkus processing,
 
 Without jni-config.json (OR the processor adding JniRuntimeAccessBuildItem?) we get an NPE from [JNIFunctions.java](https://github.com/oracle/graal/blob/vm-ce-21.3.0/substratevm/src/com.oracle.svm.jni/src/com/oracle/svm/jni/functions/JNIFunctions.java#L1095) that doesn't say which class is missing.
 
@@ -65,54 +59,6 @@ index 924061a..b803448 100644
  ,
  {
    "name":"com.caoccao.javet.values.reference.IV8ValueReference",
-```
-
-the test instead fails on:
-
-```
-2021-11-02 06:41:01,485 ERROR [io.qua.ver.htt.run.QuarkusErrorHandler] (executor-thread-0) HTTP Request to /quarkus-javet/node failed, error id: 0a9bc10d-03bd-4ecf-8829-c895e466137f-1: org.jboss.resteasy.spi.UnhandledException: java.lang.ClassCastException: com.caoccao.javet.interop.options.NodeRuntimeOptions cannot be cast to com.caoccao.javet.interop.options.V8RuntimeOptions
-	at org.jboss.resteasy.core.ExceptionHandler.handleApplicationException(ExceptionHandler.java:106)
-	at org.jboss.resteasy.core.ExceptionHandler.handleException(ExceptionHandler.java:372)
-	at org.jboss.resteasy.core.SynchronousDispatcher.writeException(SynchronousDispatcher.java:218)
-	at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:519)
-	at org.jboss.resteasy.core.SynchronousDispatcher.lambda$invoke$4(SynchronousDispatcher.java:261)
-	at org.jboss.resteasy.core.SynchronousDispatcher.lambda$preprocess$0(SynchronousDispatcher.java:161)
-	at org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext.filter(PreMatchContainerRequestContext.java:364)
-	at org.jboss.resteasy.core.SynchronousDispatcher.preprocess(SynchronousDispatcher.java:164)
-	at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:247)
-	at io.quarkus.resteasy.runtime.standalone.RequestDispatcher.service(RequestDispatcher.java:73)
-	at io.quarkus.resteasy.runtime.standalone.VertxRequestHandler.dispatch(VertxRequestHandler.java:135)
-	at io.quarkus.resteasy.runtime.standalone.VertxRequestHandler$1.run(VertxRequestHandler.java:90)
-	at io.quarkus.vertx.core.runtime.VertxCoreRecorder$13.runWith(VertxCoreRecorder.java:543)
-	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2449)
-	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1478)
-	at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)
-	at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)
-	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
-	at java.lang.Thread.run(Thread.java:829)
-	at com.oracle.svm.core.thread.JavaThreads.threadStartRoutine(JavaThreads.java:596)
-	at com.oracle.svm.core.posix.thread.PosixJavaThreads.pthreadStartRoutine(PosixJavaThreads.java:192)
-Caused by: java.lang.ClassCastException: com.caoccao.javet.interop.options.NodeRuntimeOptions cannot be cast to com.caoccao.javet.interop.options.V8RuntimeOptions
-	at com.oracle.svm.jni.JNIJavaCallWrappers.jniInvoke_VA_LIST_V8RuntimeOptions_getGlobalName_8dd8919c5fe1881b7d65dc5546843c524d58f979(JNIJavaCallWrappers.java:0)
-	at com.caoccao.javet.interop.V8Native.createV8Runtime(V8Native.java)
-	at com.caoccao.javet.interop.V8Host.createV8Runtime(V8Host.java:265)
-	at com.caoccao.javet.interop.V8Host.createV8Runtime(V8Host.java:240)
-	at com.caoccao.javet.interop.V8Host.createV8Runtime(V8Host.java:227)
-	at se.yolean.javet.quarkus.it.QuarkusJavetResource.node(QuarkusJavetResource.java:50)
-	at se.yolean.javet.quarkus.it.QuarkusJavetResource_ClientProxy.node(QuarkusJavetResource_ClientProxy.zig:244)
-	at java.lang.reflect.Method.invoke(Method.java:566)
-	at org.jboss.resteasy.core.MethodInjectorImpl.invoke(MethodInjectorImpl.java:170)
-	at org.jboss.resteasy.core.MethodInjectorImpl.invoke(MethodInjectorImpl.java:130)
-	at org.jboss.resteasy.core.ResourceMethodInvoker.internalInvokeOnTarget(ResourceMethodInvoker.java:660)
-	at org.jboss.resteasy.core.ResourceMethodInvoker.invokeOnTargetAfterFilter(ResourceMethodInvoker.java:524)
-	at org.jboss.resteasy.core.ResourceMethodInvoker.lambda$invokeOnTarget$2(ResourceMethodInvoker.java:474)
-	at org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext.filter(PreMatchContainerRequestContext.java:364)
-	at org.jboss.resteasy.core.ResourceMethodInvoker.invokeOnTarget(ResourceMethodInvoker.java:476)
-	at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:434)
-	at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:408)
-	at org.jboss.resteasy.core.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:69)
-	at org.jboss.resteasy.core.SynchronousDispatcher.invoke(SynchronousDispatcher.java:492)
-	... 17 more
 ```
 
 ## Devloop
@@ -192,7 +138,7 @@ Quarkus [docs](https://quarkus.io/guides/writing-extensions#multi-module-maven-p
 NATIVE_BUILD_OPTS="-Dquarkus.native.remote-container-build=true"
 NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.builder-image=quarkus-javet-builder:local"
 NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.enable-reports=true"
-# Get stdout from container-build docker run
+# Get stdout from container-build docker run; workaround for remote build volume not using builder's user
 NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.container-runtime-options=-ti,--user=0:0"
 # https://github.com/caoccao/Javet/commit/a7dc048b665166d77c532f066281282fb7cdb1de
 #NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Djavet.lib.loading.type=system"

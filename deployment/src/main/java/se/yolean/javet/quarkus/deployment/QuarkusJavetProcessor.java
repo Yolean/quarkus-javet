@@ -31,12 +31,17 @@ class QuarkusJavetProcessor {
   @Record(ExecutionTime.RUNTIME_INIT)
   void registerLibraryRecorder(QuarkusJavetRecorder recorder) {
     LOGGER.info("Registering loadLibrary calls");
-    recorder.loadLibraryModeV8();
-    recorder.loadLibraryModeNode();
+    for (JSRuntimeType mode : getRuntimeTypes()) {
+      if (JSRuntimeType.V8 == mode) recorder.loadLibraryModeV8();
+      if (JSRuntimeType.Node == mode) recorder.loadLibraryModeNode();
+    }
   }
 
   Collection<JSRuntimeType> getRuntimeTypes() {
-    return List.of(JSRuntimeType.V8, JSRuntimeType.Node);
+    return List.of(
+        // JSRuntimeType.Node,
+        JSRuntimeType.V8
+      );
   }
 
   @BuildStep

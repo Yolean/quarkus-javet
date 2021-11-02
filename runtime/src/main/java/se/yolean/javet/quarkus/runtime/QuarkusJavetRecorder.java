@@ -30,7 +30,8 @@ public class QuarkusJavetRecorder {
   }
 
   public void loadLibraryModeNode() {
-    loadLibrary(JSRuntimeType.Node);
+    // loadLibrary(JSRuntimeType.Node);
+    LOGGER.warning("Only Javet V8 mode supported at the moment. Skipping Node lib loading.");
   }
 
   // https://github.com/quarkusio/quarkus/blob/2.4.0.Final/extensions/kafka-client/runtime/src/main/java/io/quarkus/kafka/client/runtime/KafkaRecorder.java#L23
