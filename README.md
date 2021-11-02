@@ -105,6 +105,37 @@ Without native build (this mode currently doesn't do anything useful);
 mvn clean install && (cd integration-tests/; mvn clean test)
 ```
 
+## Builder image
+
+For builds to be platform independent we must use Quarkus' "container build" mode
+instead of the default local build.
+Howerver that mode doesn't seem to support our dependence on lib files
+extracted to /tmp during build "recording".
+
+```
+BUILDER_BASE=quay.io/quarkus/ubi-quarkus-mandrel:21.3-java11
+mvn dependency:unpack-dependencies -DincludeGroupIds=com.caoccao.javet
+cat <<EOF >>runtime/target/dependency/.dockerignore
+*
+!*.so
+EOF
+cat <<EOF >>runtime/target/dependency/Dockerfile
+FROM $BUILDER_BASE
+COPY *.so /tmp/
+RUN ls -l /tmp/
+EOF
+docker build -t quarkus-javet-builder:local runtime/target/dependency/
+```
+
+TODO maybe it's dependency libs that are missing at build time:
+
+```
+The bundle named: messages, has not been found. If the bundle is part of a module, verify the bundle name is a fully qualified class name. Otherwise verify the bundle path is accessible in the classpath.
+04:26:25,635 SEVERE [com.cao.jav.int.loa.JavetLibLoader] /tmp/libjavet-node-linux-x86_64.v.1.0.3.so: /lib64/libm.so.6: version `GLIBC_2.29 not found (required by /tmp/libjavet-node-linux-x86_64.v.1.0.3.so)
+04:26:25,641 SEVERE [com.cao.jav.int.loa.JavetLibLoader] /tmp/libjavet-v8-linux-x86_64.v.1.0.3.so: /lib64/libstdc++.so.6: version `GLIBCXX_3.4.26 not found (required by /tmp/libjavet-v8-linux-x86_64.v.1.0.3.so)
+04:26:25,646 SEVERE [com.cao.jav.int.loa.JavetLibLoader] java.lang.UnsatisfiedLinkError: /tmp/libjavet-node-linux-x86_64.v.1.0.3.so: /lib64/libm.so.6: version `GLIBC_2.29' not found (required by /tmp/libjavet-node-linux-x86_64.v.1.0.3.so)
+```
+
 ## Native test
 
 Quarkus [docs](https://quarkus.io/guides/writing-extensions#multi-module-maven-projects-and-the-development-mode) mention that the example project can be part of the multi-module project, but we wouldn't want to deploy it to central. Until the matter is settled we build them using the one-liner below:
@@ -112,7 +143,7 @@ Quarkus [docs](https://quarkus.io/guides/writing-extensions#multi-module-maven-p
 ```
 # Opts depend on the build and test environment
 NATIVE_BUILD_OPTS="-Dquarkus.native.remote-container-build=true"
-NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel:21.3-java11"
+NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.builder-image=quarkus-javet-builder:local"
 NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.enable-reports=true"
 # Get stdout from container-build docker run
 NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.container-runtime-options=-ti"
