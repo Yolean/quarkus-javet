@@ -123,6 +123,8 @@ cat <<EOF >>runtime/target/dependency/Dockerfile
 FROM $BUILDER_BASE
 COPY *.so /tmp/
 RUN ls -l /tmp/
+# https://github.com/caoccao/Javet/discussions/26
+RUN strings /lib64/libstdc++.so.6 | grep GLIBCXX
 EOF
 docker build -t quarkus-javet-builder:local runtime/target/dependency/
 ```
