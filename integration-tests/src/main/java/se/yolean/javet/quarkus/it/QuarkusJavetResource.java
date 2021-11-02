@@ -28,27 +28,11 @@ import com.caoccao.javet.interop.V8Runtime;
 @ApplicationScoped
 public class QuarkusJavetResource {
 
-  V8Host nodeInstance() {
-    return V8Host.getNodeInstance();
-  }
-
-  V8Host v8Instance() {
-    return V8Host.getV8Instance();
-  }
-
   @GET
   @Path("/v8")
   public String v8() throws JavetException {
-    try (V8Runtime v8Runtime = v8Instance().createV8Runtime()) {
+    try (V8Runtime v8Runtime = V8Host.getV8Instance().createV8Runtime()) {
       return v8Runtime.getExecutor("'Javet V8 mode invoked'").executeString();
-    }
-  }
-
-  @GET
-  @Path("/node")
-  public String node() throws JavetException {
-    try (V8Runtime v8Runtime = nodeInstance().createV8Runtime()) {
-      return v8Runtime.getExecutor("'Javet Node mode invoked'").executeString();
     }
   }
 

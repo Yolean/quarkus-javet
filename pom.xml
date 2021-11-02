@@ -12,7 +12,9 @@
     <module>runtime</module>
   </modules>
   <properties>
-    <javet.version>1.0.2</javet.version>
+    <!-- https://github.com/caoccao/Javet/actions/runs/1407532235 -->
+    <!-- mvn install:install-file -Dfile=javet-1.0.3.jar -Dversion=1.0.3-e30ff27b271701bf1be74e93ba2150e10a7e2a6c -DgroupId=com.caoccao.javet -DartifactId=javet -Dpackaging=jar -->
+    <javet.version>1.0.3-e30ff27b271701bf1be74e93ba2150e10a7e2a6c</javet.version>
     <compiler-plugin.version>3.8.1</compiler-plugin.version>
     <failsafe-plugin.version>${surefire-plugin.version}</failsafe-plugin.version>
     <maven.compiler.parameters>true</maven.compiler.parameters>

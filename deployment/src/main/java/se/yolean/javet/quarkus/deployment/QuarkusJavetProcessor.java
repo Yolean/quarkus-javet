@@ -19,9 +19,7 @@ import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.RuntimeReinitializedClassBuildItem;
 import io.quarkus.deployment.pkg.NativeConfig;
-import se.yolean.javet.quarkus.runtime.JavetLibLoadingSetup;
 import se.yolean.javet.quarkus.runtime.QuarkusJavetRecorder;
-import se.yolean.javet.quarkus.runtime.QuarkusJavetStaticInit;
 
 class QuarkusJavetProcessor {
 
@@ -30,20 +28,20 @@ class QuarkusJavetProcessor {
   private static final Logger LOGGER = Logger.getLogger(QuarkusJavetProcessor.class.getSimpleName());
 
   @BuildStep
-  @Record(ExecutionTime.STATIC_INIT)
-  void registerStaticRecorder(QuarkusJavetStaticInit recorder) {
-    recorder.disableBuiltInLibLoading();
-  }
-
-  @BuildStep
   @Record(ExecutionTime.RUNTIME_INIT)
   void registerLibraryRecorder(QuarkusJavetRecorder recorder) {
-    recorder.loadLibraryModeV8();
-    recorder.loadLibraryModeNode();
+    LOGGER.info("Registering loadLibrary calls");
+    for (JSRuntimeType mode : getRuntimeTypes()) {
+      if (JSRuntimeType.V8 == mode) recorder.loadLibraryModeV8();
+      if (JSRuntimeType.Node == mode) recorder.loadLibraryModeNode();
+    }
   }
 
   Collection<JSRuntimeType> getRuntimeTypes() {
-    return List.of(JSRuntimeType.V8, JSRuntimeType.Node);
+    return List.of(
+        // JSRuntimeType.Node,
+        JSRuntimeType.V8
+      );
   }
 
   @BuildStep
@@ -61,8 +59,6 @@ class QuarkusJavetProcessor {
       LOGGER.info("Retaining Javet's default lib loading for non-native/non-container build");
       return;
     }
-
-    JavetLibLoadingSetup.disableBuiltInLoader();
 
     for (JSRuntimeType mode : getRuntimeTypes()) {
       addNativeJavetMode(nativeLibs, config, mode);
