@@ -36,6 +36,8 @@
     {"name":"createV8ValueLong","parameterTypes":["long"] }, 
     {"name":"createV8ValueNull","parameterTypes":[] }, 
     {"name":"createV8ValueUndefined","parameterTypes":[] }, 
+    {"name":"gcEpilogueCallback","parameterTypes":["int","int"] }, 
+    {"name":"gcPrologueCallback","parameterTypes":["int","int"] }, 
     {"name":"getV8Module","parameterTypes":["java.lang.String","com.caoccao.javet.values.reference.IV8Module"] }, 
     {"name":"receivePromiseRejectCallback","parameterTypes":["int","com.caoccao.javet.values.reference.V8ValuePromise","com.caoccao.javet.values.V8Value"] }, 
     {"name":"removeCallbackContext","parameterTypes":["long"] }
