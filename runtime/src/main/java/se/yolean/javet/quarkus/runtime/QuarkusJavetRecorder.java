@@ -21,36 +21,21 @@ public class QuarkusJavetRecorder {
 
   private static final Logger LOGGER = Logger.getLogger(QuarkusJavetRecorder.class.getSimpleName());
 
-  // Workaround for test failures caused by java.lang.UnsatisfiedLinkError: Native Library /tmp/libjavet-v8-linux-x86_64.v.1.0.2.so already loaded in another classloader
-  // Might indicate that we bind the calls to the wrong phases
-  private static boolean loadedV8 = false;
-  private static boolean loadedNode = false;
-
   private static JavetLibLoader getJavetLibLoader(JSRuntimeType mode) {
     return new JavetLibLoader(mode);
   }
 
   public void loadLibraryModeV8() {
-    if (loadedV8) {
-      LOGGER.warning("Loader method for V8 has already been invoked. Skipping.");
-      return;
-    }
     loadLibrary(JSRuntimeType.V8);
-    loadedV8 = true;
   }
 
   public void loadLibraryModeNode() {
-    if (loadedNode) {
-      LOGGER.warning("Loader method for Node has already been invoked. Skipping.");
-      return;
-    }
     loadLibrary(JSRuntimeType.Node);
-    loadedNode = true;
   }
 
   // https://github.com/quarkusio/quarkus/blob/2.4.0.Final/extensions/kafka-client/runtime/src/main/java/io/quarkus/kafka/client/runtime/KafkaRecorder.java#L23
   protected void loadLibrary(JSRuntimeType mode) {
-    JavetLibLoadingSetup.disableBuiltInLoader();
+    LOGGER.info("Loading Javet library for mode " + mode);
 
     JavetLibLoader loader = getJavetLibLoader(mode);
     String resourceFileName;
