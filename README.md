@@ -119,12 +119,39 @@ cat <<EOF >>runtime/target/dependency/.dockerignore
 *
 !*.so
 EOF
-cat <<EOF >>runtime/target/dependency/Dockerfile
-FROM $BUILDER_BASE
+cat <<EOF >runtime/target/dependency/Dockerfile
+FROM $BUILDER_BASE as mandrel
+FROM ubuntu:20.04 as builder
+RUN set -ex; \
+  export DEBIAN_FRONTEND=noninteractive; \
+  apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    libc-dev \
+    zlib1g-dev \
+    --no-install-recommends; \
+  \
+  rm -rf /var/lib/apt/lists; \
+  rm -rf /var/log/dpkg.log /var/log/alternatives.log /var/log/apt /root/.gnupg
+COPY --from=mandrel /opt/mandrel /opt/mandrel
+ENV \
+  CI=true \
+  GRAALVM_HOME=/opt/mandrel \
+  JAVA_HOME=/opt/mandrel \
+  MAVEN_CONFIG=/home/nonroot/.m2 \
+  PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/mandrel/bin
+# https://github.com/caoccao/Javet/discussions/26
+#RUN strings /lib64/libstdc++.so.6 | grep GLIBCXX_3.4.26
+# docker inspect quay.io/quarkus/ubi-quarkus-mandrel:21.2.0.1-Final-java11
+RUN grep 'quarkus:x:1001' /etc/passwd || \
+  echo 'quarkus:x:1001:65534:Quarkus:/home/quarkus:/usr/sbin/nologin' >> /etc/passwd && \
+  mkdir -p /home/quarkus && touch /home/quarkus/.bash_history && chown -R 1001:65534 /home/quarkus
+USER 1001:nogroup
+ENTRYPOINT ["native-image"]
+#VOLUME /project
+WORKDIR /project
 COPY *.so /tmp/
 RUN ls -l /tmp/
-# https://github.com/caoccao/Javet/discussions/26
-RUN strings /lib64/libstdc++.so.6 | grep GLIBCXX
 EOF
 docker build -t quarkus-javet-builder:local runtime/target/dependency/
 ```
@@ -148,7 +175,7 @@ NATIVE_BUILD_OPTS="-Dquarkus.native.remote-container-build=true"
 NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.builder-image=quarkus-javet-builder:local"
 NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.enable-reports=true"
 # Get stdout from container-build docker run
-NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.container-runtime-options=-ti"
+NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.container-runtime-options=-ti,--user=0:0"
 # https://github.com/caoccao/Javet/commit/a7dc048b665166d77c532f066281282fb7cdb1de
 #NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Djavet.lib.loading.type=system"
 NATIVE_BUILD_OPTS="$NATIVE_BUILD_OPTS -Dquarkus.native.additional-build-args=-J-Djavet.lib.loading.type=custom,-J-Djavet.lib.loading.path=/tmp"
